@@ -6,7 +6,7 @@
 
 	<groupId>com.seepine</groupId>
 	<artifactId>json</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 
 	<name>json</name>
 	<url>https://github.com/seepine/json</url>
@@ -31,17 +31,17 @@
 	<!--scm-->
 	<scm>
 		<url>https://seepine.com</url>
-		<connection>scm:git:https://github.com/seepine/http.git</connection>
-		<developerConnection>scm:git:https://github.com/seepine/http.git</developerConnection>
+		<connection>scm:git:https://github.com/seepine/json.git</connection>
+		<developerConnection>scm:git:https://github.com/seepine/json.git</developerConnection>
 	</scm>
 
 	<properties>
 		<java.version>1.8</java.version>
 		<maven.compiler.source>8</maven.compiler.source>
 		<maven.compiler.target>8</maven.compiler.target>
-		<!-- follow springBoot 2.6.7 -->
-		<jackson.version>2.13.2</jackson.version>
-		<jackson-databind.version>2.13.2.1</jackson-databind.version>
+		<!-- follow springBoot 2.7.0 -->
+		<jackson.version>2.13.3</jackson.version>
+		<jackson-databind.version>2.13.3</jackson-databind.version>
 	</properties>
 
 	<dependencies>
