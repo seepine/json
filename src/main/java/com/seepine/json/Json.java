@@ -7,7 +7,6 @@ import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
-import com.seepine.json.mapper.GetterPropertyNamingStrategy;
 import com.seepine.json.mapper.JavaTimeModule;
 
 import java.time.ZoneId;
@@ -29,8 +28,7 @@ public class Json {
           .configure(SerializationFeature.WRITE_ENUMS_USING_TO_STRING, true)
           .setLocale(Locale.CHINA)
           .registerModule(new JavaTimeModule())
-          .setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()))
-          .setPropertyNamingStrategy(new GetterPropertyNamingStrategy());
+          .setTimeZone(TimeZone.getTimeZone(ZoneId.systemDefault()));
 
   public static JsonNodeFactory getNodeFactory() {
     return OBJECT_MAPPER.getNodeFactory();
@@ -95,10 +93,8 @@ public class Json {
   /**
    * support complex object
    *
-   * <p>List<NormalBean> list = Json.parse(json, List.class, NormalBean.class);
-   *
-   * <p>Map<Long,String> map = Json.parse(json, Map.class, Long.class, String.class);
-   *
+   * @code List<NormalBean> list = Json.parse(json, List.class, NormalBean.class);
+   * @code Map<Long,String> map = Json.parse(json, Map.class, Long.class, String.class);
    * @param jsonStr jsonStr
    * @param parametrized parentClass
    * @param parameterClasses tClass

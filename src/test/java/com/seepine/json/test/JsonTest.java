@@ -2,6 +2,7 @@ package com.seepine.json.test;
 
 import com.seepine.json.Json;
 import com.seepine.json.JsonObject;
+import com.seepine.json.test.entity.CustomBean;
 import com.seepine.json.test.entity.NormalBean;
 
 public class JsonTest {
@@ -15,5 +16,10 @@ public class JsonTest {
     NormalBean normalBean = Json.parse(normalJson, NormalBean.class);
     System.out.println("\nnormalBean:");
     System.out.println(normalBean);
+
+    System.out.println("\ncustomBean:");
+    System.out.println(Json.toJson(new CustomBean("aaa", "BBB")));
+    System.out.println(Json.parse("{\"paytel\":\"aaa\",\"payvld\":\"BBB\"}", CustomBean.class));
+    System.out.println(Json.parse("{\"PaYTeL\":\"aaa\",\"payVLD\":\"BBB\"}", CustomBean.class));
   }
 }
