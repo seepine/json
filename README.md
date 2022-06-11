@@ -4,12 +4,16 @@
 
 ## 依赖
 
+- Latest
+  Version: [![Maven Central](https://img.shields.io/maven-central/v/com.seepine/json.svg)](https://search.maven.org/search?q=g:com.seepine%20a:json)
+- Maven:
+
 ```xml
 
 <dependency>
   <groupId>com.seepine</groupId>
   <artifactId>json</artifactId>
-  <version>0.0.2</version>
+  <version>${latest.version}</version>
 </dependency>
 ```
 
