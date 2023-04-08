@@ -514,4 +514,34 @@ public class JsonObject extends ContainerNode<JsonObject> implements java.io.Ser
         ? new BigDecimal(get(fieldName).asText())
         : null;
   }
+
+  /**
+   * 构建JsonObject，等同 new JsonObject()
+   *
+   * @return jsonObject
+   * @since 0.2.1
+   */
+  public static JsonObject build() {
+    return new JsonObject();
+  }
+
+  /**
+   * 构建JsonObject并设置值，等同 new JsonObject().set(field,v)
+   *
+   * @return jsonObject
+   * @since 0.2.1
+   */
+  public static JsonObject build(String fieldName, Object v) {
+    return new JsonObject().set(fieldName, v);
+  }
+
+  /**
+   * 构建JsonObject并设置值，等同 new JsonObject().set(field,v)
+   *
+   * @return jsonObject
+   * @since 0.2.1
+   */
+  public static JsonObject build(String fieldName, String v) {
+    return new JsonObject().set(fieldName, v);
+  }
 }
