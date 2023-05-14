@@ -1,11 +1,10 @@
-package com.seepine.json;
+package com.seepine.json.mapper;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.seepine.json.mapper.JavaTimeModule;
 
 import java.time.ZoneId;
 import java.util.Locale;
