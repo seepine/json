@@ -1,518 +1,141 @@
 package com.seepine.json;
 
-import com.fasterxml.jackson.core.JsonGenerator;
-import com.fasterxml.jackson.core.JsonPointer;
-import com.fasterxml.jackson.core.JsonToken;
-import com.fasterxml.jackson.core.type.WritableTypeId;
 import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.databind.SerializerProvider;
-import com.fasterxml.jackson.databind.jsontype.TypeSerializer;
-import com.fasterxml.jackson.databind.node.*;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
+import com.seepine.json.exception.JsonException;
 
-import java.io.IOException;
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.util.*;
+import java.util.Iterator;
 
 /**
- * copy from objectNode and enhance get/set
+ * enhance objectNode get/set, the get will return null when there are no values or mismatched types
  *
  * @author seepine
  */
-public class JsonObject extends ContainerNode<JsonObject> implements java.io.Serializable {
+public class JsonObject implements Serializable {
   private static final long serialVersionUID = 1L;
+  ObjectNode objectNode;
 
-  // Note: LinkedHashMap for backwards compatibility
-  protected final Map<String, JsonNode> _children;
-
+  /** 构造空json对象 */
   public JsonObject() {
-    this(Json.getNodeFactory());
+    objectNode = Json.objectNode();
   }
 
-  public JsonObject(Map<String, JsonNode> kids) {
-    super(Json.getNodeFactory());
-    this._children = kids;
-  }
-
-  public JsonObject(ObjectNode objectNode) {
-    this(Json.getNodeFactory());
-    Iterator<Map.Entry<String, JsonNode>> it = objectNode.fields();
-    while (it.hasNext()) {
-      Map.Entry<String, JsonNode> entry = it.next();
-      _children.put(entry.getKey(), entry.getValue());
-    }
-  }
-
+  /**
+   * 通过 jsonNode 构造，必须是ObjectNode
+   *
+   * @param jsonNode jsonNode
+   */
   public JsonObject(JsonNode jsonNode) {
-    this(Json.getNodeFactory());
-    if (!jsonNode.isObject()) {
-      throw new UnsupportedOperationException("Not object, cannot be cast to JsonObject");
-    }
-    Iterator<Map.Entry<String, JsonNode>> it = jsonNode.fields();
-    while (it.hasNext()) {
-      Map.Entry<String, JsonNode> entry = it.next();
-      _children.put(entry.getKey(), entry.getValue());
+    if (jsonNode == null) {
+      throw new JsonException("jsonNode not be null");
+    } else if (!jsonNode.isObject()) {
+      throw new JsonException("jsonNode not object");
+    } else {
+      this.objectNode = (ObjectNode) jsonNode;
     }
   }
 
-  public JsonObject(JsonNodeFactory nc) {
-    super(nc);
-    _children = new LinkedHashMap<>();
-  }
-
-  @Override
-  public int hashCode() {
-    return _children.hashCode();
-  }
-
-  @Override
-  public JsonToken asToken() {
-    return JsonToken.START_OBJECT;
-  }
-
-  @Override
-  public void serialize(JsonGenerator g, SerializerProvider provider) throws IOException {
-    @SuppressWarnings("deprecation")
-    boolean trimEmptyArray =
-        (provider != null) && !provider.isEnabled(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS);
-    g.writeStartObject(this);
-    for (Map.Entry<String, JsonNode> en : _children.entrySet()) {
-      BaseJsonNode value = (BaseJsonNode) en.getValue();
-      if (trimEmptyArray && value.isArray() && value.isEmpty(provider)) {
-        continue;
-      }
-      g.writeFieldName(en.getKey());
-      value.serialize(g, provider);
+  /**
+   * 通过objectNode构造，不能为空
+   *
+   * @param objectNode objectNode
+   */
+  public JsonObject(ObjectNode objectNode) {
+    if (objectNode == null) {
+      throw new JsonException("objectNode not be null");
+    } else {
+      this.objectNode = objectNode;
     }
-    g.writeEndObject();
   }
 
-  @Override
-  public void serializeWithType(
-      JsonGenerator g, SerializerProvider provider, TypeSerializer typeSer) throws IOException {
-    boolean trimEmptyArray =
-        (provider != null) && !provider.isEnabled(SerializationFeature.WRITE_EMPTY_JSON_ARRAYS);
-    WritableTypeId typeIdDef =
-        typeSer.writeTypePrefix(g, typeSer.typeId(this, JsonToken.START_OBJECT));
-    for (Map.Entry<String, JsonNode> en : _children.entrySet()) {
-      BaseJsonNode value = (BaseJsonNode) en.getValue();
-      if (trimEmptyArray && value.isArray() && value.isEmpty(provider)) {
-        continue;
-      }
-      g.writeFieldName(en.getKey());
-      value.serialize(g, provider);
-    }
-    typeSer.writeTypeSuffix(g, typeIdDef);
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public JsonObject deepCopy() {
-    JsonObject ret = new JsonObject(_nodeFactory);
-    for (Map.Entry<String, JsonNode> entry : _children.entrySet())
-      ret._children.put(entry.getKey(), entry.getValue().deepCopy());
-    return ret;
-  }
-
-  @Override
-  public int size() {
-    return _children.size();
-  }
-
-  @Override
-  public JsonNode get(int index) {
-    return null;
-  }
-
-  @Override
-  public JsonNode get(String fieldName) {
-    return _children.get(fieldName);
-  }
-
-  @Override
-  public JsonNode path(String fieldName) {
-    JsonNode n = _children.get(fieldName);
-    if (n != null) {
-      return n;
-    }
-    return MissingNode.getInstance();
-  }
-
-  @Override
-  public JsonNode path(int index) {
-    return MissingNode.getInstance();
-  }
-
-  @Override
-  protected JsonNode _at(JsonPointer ptr) {
-    return get(ptr.getMatchingProperty());
-  }
-
-  @Override
-  public JsonNodeType getNodeType() {
-    return JsonNodeType.OBJECT;
-  }
-
-  @Override
-  public JsonNode findValue(String fieldName) {
-    for (Map.Entry<String, JsonNode> entry : _children.entrySet()) {
-      if (fieldName.equals(entry.getKey())) {
-        return entry.getValue();
-      }
-      JsonNode value = entry.getValue().findValue(fieldName);
-      if (value != null) {
-        return value;
-      }
-    }
-    return null;
-  }
-
-  @Override
-  public JsonObject findParent(String fieldName) {
-    for (Map.Entry<String, JsonNode> entry : _children.entrySet()) {
-      if (fieldName.equals(entry.getKey())) {
-        return this;
-      }
-      JsonNode value = entry.getValue().findParent(fieldName);
-      if (value != null) {
-        return (JsonObject) value;
-      }
-    }
-    return null;
-  }
-
-  @Override
-  public List<JsonNode> findParents(String fieldName, List<JsonNode> foundSoFar) {
-    for (Map.Entry<String, JsonNode> entry : _children.entrySet()) {
-      if (fieldName.equals(entry.getKey())) {
-        if (foundSoFar == null) {
-          foundSoFar = new ArrayList<>();
-        }
-        foundSoFar.add(this);
-      } else { // only add children if parent not added
-        foundSoFar = entry.getValue().findParents(fieldName, foundSoFar);
-      }
-    }
-    return foundSoFar;
-  }
-
-  @Override
-  public List<JsonNode> findValues(String fieldName, List<JsonNode> foundSoFar) {
-    for (Map.Entry<String, JsonNode> entry : _children.entrySet()) {
-      if (fieldName.equals(entry.getKey())) {
-        if (foundSoFar == null) {
-          foundSoFar = new ArrayList<>();
-        }
-        foundSoFar.add(entry.getValue());
-      } else { // only add children if parent not added
-        foundSoFar = entry.getValue().findValues(fieldName, foundSoFar);
-      }
-    }
-    return foundSoFar;
-  }
-
-  @Override
-  public List<String> findValuesAsText(String fieldName, List<String> foundSoFar) {
-    for (Map.Entry<String, JsonNode> entry : _children.entrySet()) {
-      if (fieldName.equals(entry.getKey())) {
-        if (foundSoFar == null) {
-          foundSoFar = new ArrayList<>();
-        }
-        foundSoFar.add(entry.getValue().asText());
-      } else {
-        foundSoFar = entry.getValue().findValuesAsText(fieldName, foundSoFar);
-      }
-    }
-    return foundSoFar;
-  }
-
-  protected boolean _childrenEqual(JsonObject other) {
-    return _children.equals(other._children);
-  }
-
-  @Override
+  /**
+   * 判断是否相等
+   *
+   * @param o 对象
+   * @return 主要比较内部objectNode
+   */
   public boolean equals(Object o) {
-    if (o == this) return true;
-    if (o == null) return false;
+    if (o == null) {
+      return false;
+    }
+    if (o == this) {
+      return true;
+    }
     if (o instanceof JsonObject) {
-      return _childrenEqual((JsonObject) o);
+      return objectNode.equals(((JsonObject) o).toObjectNode());
     }
-    return false;
-  }
-
-  @Override
-  public JsonObject removeAll() {
-    _children.clear();
-    return this;
-  }
-
-  @Override
-  public boolean equals(Comparator<JsonNode> comparator, JsonNode o) {
-    if (!(o instanceof JsonObject)) {
-      return false;
-    }
-    JsonObject other = (JsonObject) o;
-    Map<String, JsonNode> m1 = _children;
-    Map<String, JsonNode> m2 = other._children;
-
-    final int len = m1.size();
-    if (m2.size() != len) {
-      return false;
-    }
-    for (Map.Entry<String, JsonNode> entry : m1.entrySet()) {
-      JsonNode v2 = m2.get(entry.getKey());
-      if ((v2 == null) || !entry.getValue().equals(comparator, v2)) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  @Override
-  @SuppressWarnings("unchecked")
-  public ArrayNode withArray(String propertyName) {
-    JsonNode n = _children.get(propertyName);
-    if (n != null) {
-      if (n instanceof ArrayNode) {
-        return (ArrayNode) n;
-      }
-      throw new UnsupportedOperationException(
-          "Property '"
-              + propertyName
-              + "' has value that is not of type ArrayNode (but "
-              + n.getClass().getName()
-              + ")");
-    }
-    ArrayNode result = arrayNode();
-    _children.put(propertyName, result);
-    return result;
-  }
-
-  @Override
-  public JsonNode required(String propertyName) {
-    JsonNode n = _children.get(propertyName);
-    if (n != null) {
-      return n;
-    }
-    return _reportRequiredViolation("No value for property '%s' of `JsonObject`", propertyName);
+    return objectNode.equals(o);
   }
 
   /**
-   * Method to use for accessing all properties (with both names and values) of this JSON Object.
-   */
-  @Override
-  public Iterator<Map.Entry<String, JsonNode>> fields() {
-    return _children.entrySet().iterator();
-  }
-
-  @SuppressWarnings("unchecked")
-  @Override
-  public JsonObject with(String propertyName) {
-    JsonNode n = _children.get(propertyName);
-    if (n != null) {
-      if (n instanceof JsonObject) {
-        return (JsonObject) n;
-      }
-      throw new UnsupportedOperationException(
-          "Property '"
-              + propertyName
-              + "' has value that is not of type ObjectNode (but "
-              + n.getClass().getName()
-              + ")");
-    }
-    JsonObject result = new JsonObject(_nodeFactory);
-    _children.put(propertyName, result);
-    return result;
-  }
-
-  /*
-  /**********************************************************
-  /* Internal methods (overridable)
-  /**********************************************************
-   */
-  protected JsonObject _set(String fieldName, JsonNode value) {
-    _children.put(fieldName, value);
-    return this;
-  }
-
-  /*
-  /**********************************************************
-  /* Extended ObjectNode API, mutators, typed
-  /**********************************************************
-   */
-
-  /**
-   * jsonObject.setArray("list").add(1).add(2).add(3);
+   * 返回内部objectNode的hashCode
    *
-   * @param propertyName propertyName
-   * @return Newly constructed ArrayNode (NOT the old value, which could be of any type)
+   * @return hashCode
    */
-  public ArrayNode setArray(String propertyName) {
-    ArrayNode n = arrayNode();
-    _set(propertyName, n);
-    return n;
+  public int hashCode() {
+    return objectNode.hashCode();
   }
 
-  public JsonObject setArray(String propertyName, ArrayNode arrayNode) {
-    _set(propertyName, arrayNode);
-    return this;
-  }
   /**
-   * jsonObject.setObject("user").set("username","cat").set("age",26);
+   * 输出json字符串，同toJson()
    *
-   * @param propertyName propertyName
-   * @return Newly constructed ObjectNode (NOT the old value, which could be of any type)
+   * @return json串
    */
-  public JsonObject setObject(String propertyName) {
-    JsonObject n = new JsonObject(_nodeFactory);
-    _set(propertyName, n);
-    return n;
+  @Override
+  public String toString() {
+    return objectNode.toString();
   }
 
-  public JsonObject setObject(String propertyName, JsonObject jsonObject) {
-    _set(propertyName, jsonObject);
-    return this;
+  /**
+   * 输出json字符串，同toString()
+   *
+   * @return json串
+   */
+  public String toJson() {
+    return objectNode.toString();
   }
 
-  public JsonObject setNull(String propertyName) {
-    _children.put(propertyName, nullNode());
-    return this;
+  /**
+   * 获取ObjectNode对象
+   *
+   * @return objectNode
+   */
+  public ObjectNode toObjectNode() {
+    return objectNode;
   }
 
-  public JsonObject set(String propertyName, Object pojo) {
-    return _set(propertyName, pojoNode(pojo));
+  /**
+   * 深拷贝
+   *
+   * @return jsonObject
+   */
+  public JsonObject deepCopy() {
+    return new JsonObject(objectNode.deepCopy());
   }
 
-  public JsonObject set(String propertyName, RawValue raw) {
-    return _set(propertyName, rawValueNode(raw));
+  /**
+   * 转对象
+   *
+   * @param toValueType bean class
+   * @return T
+   * @param <T> 类
+   */
+  public <T> T toObject(Class<T> toValueType) {
+    return Json.parse(objectNode, toValueType);
   }
 
-  public JsonObject set(String propertyName, short v) {
-    return _set(propertyName, numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, Short v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v.shortValue()));
-  }
-
-  public JsonObject set(String fieldName, int v) {
-    return _set(fieldName, numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, Integer v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v.intValue()));
-  }
-
-  public JsonObject set(String fieldName, long v) {
-    return _set(fieldName, numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, Long v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v.longValue()));
-  }
-
-  public JsonObject set(String fieldName, float v) {
-    return _set(fieldName, numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, Float v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v.floatValue()));
-  }
-
-  public JsonObject set(String fieldName, double v) {
-    return _set(fieldName, numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, Double v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v.doubleValue()));
-  }
-
-  public JsonObject set(String fieldName, BigDecimal v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, BigInteger v) {
-    return _set(fieldName, (v == null) ? nullNode() : numberNode(v));
-  }
-
-  public JsonObject set(String fieldName, String v) {
-    return _set(fieldName, (v == null) ? nullNode() : textNode(v));
-  }
-
-  public JsonObject set(String fieldName, boolean v) {
-    return _set(fieldName, booleanNode(v));
-  }
-
-  public JsonObject set(String fieldName, Boolean v) {
-    return _set(fieldName, (v == null) ? nullNode() : booleanNode(v));
-  }
-
-  public JsonObject set(String fieldName, byte[] v) {
-    return _set(fieldName, (v == null) ? nullNode() : binaryNode(v));
-  }
-
-  public ArrayNode getArray(String fieldName) {
-    if (!this.has(fieldName)) {
-      return null;
-    }
-    return get(fieldName).isArray() ? (ArrayNode) get(fieldName) : null;
-  }
-
-  public JsonObject getObj(String fieldName) {
-    if (!this.has(fieldName)) {
-      return null;
-    }
-    return get(fieldName).isObject() ? new JsonObject(get(fieldName)) : null;
-  }
-
-  public String getStr(String fieldName) {
-    return this.has(fieldName) ? get(fieldName).asText() : null;
-  }
-
-  public Integer getInt(String fieldName) {
-    if (!this.has(fieldName)) {
-      return null;
-    }
-    if (get(fieldName).isInt()) {
-      return get(fieldName).asInt();
-    }
-    try {
-      return Integer.valueOf(get(fieldName).asText());
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  public Boolean getBool(String fieldName) {
-    if (!this.has(fieldName)) {
-      return null;
-    }
-    return get(fieldName).isBoolean() ? get(fieldName).asBoolean() : null;
-  }
-
-  public Long getLong(String fieldName) {
-    if (!this.has(fieldName)) {
-      return null;
-    }
-    if (get(fieldName).isLong() || get(fieldName).isInt()) {
-      return get(fieldName).asLong();
-    }
-    try {
-      return Long.valueOf(get(fieldName).asText());
-    } catch (Exception e) {
-      return null;
-    }
-  }
-
-  public BigDecimal getBigDecimal(String fieldName) {
-    if (!this.has(fieldName)) {
-      return null;
-    }
-    return get(fieldName).isDouble() || get(fieldName).isBigDecimal() || get(fieldName).isInt()
-        ? new BigDecimal(get(fieldName).asText())
-        : null;
+  /**
+   * 获取迭代器
+   *
+   * @return Iterator<JsonNode>
+   */
+  public Iterator<JsonNode> iterator() {
+    return objectNode.iterator();
   }
 
   /**
@@ -536,12 +159,219 @@ public class JsonObject extends ContainerNode<JsonObject> implements java.io.Ser
   }
 
   /**
-   * 构建JsonObject并设置值，等同 new JsonObject().set(field,v)
+   * 获取jsonNode
    *
-   * @return jsonObject
-   * @since 0.2.1
+   * @param fieldName 属性
+   * @return jsonNode
    */
-  public static JsonObject build(String fieldName, String v) {
-    return new JsonObject().set(fieldName, v);
+  public JsonNode get(String fieldName) {
+    return objectNode.get(fieldName);
+  }
+
+  /**
+   * 如果属性不存在，则设置值
+   *
+   * @param fieldName 属性
+   * @param value 值
+   * @return jsonObject
+   */
+  public JsonObject setIfAbsent(String fieldName, Object value) {
+    if (!has(fieldName)) {
+      set(fieldName, value);
+    }
+    return this;
+  }
+
+  /**
+   * 设置值，如果属性存在则覆盖
+   *
+   * @param fieldName 属性
+   * @param value 值
+   * @return jsonObject
+   */
+  public JsonObject set(String fieldName, Object value) {
+    if (value == null) {
+      objectNode.putNull(fieldName);
+    } else if (value instanceof String) {
+      objectNode.put(fieldName, (String) value);
+    } else if (value instanceof Integer) {
+      objectNode.put(fieldName, (Integer) value);
+    } else if (value instanceof Boolean) {
+      objectNode.put(fieldName, (Boolean) value);
+    } else if (value instanceof Double) {
+      objectNode.put(fieldName, (Double) value);
+    } else if (value instanceof Long) {
+      objectNode.put(fieldName, (Long) value);
+    } else if (value instanceof Float) {
+      objectNode.put(fieldName, (Float) value);
+    } else if (value instanceof BigDecimal) {
+      objectNode.put(fieldName, (BigDecimal) value);
+    } else if (value instanceof BigInteger) {
+      objectNode.put(fieldName, (BigInteger) value);
+    } else if (value instanceof Short) {
+      objectNode.put(fieldName, (Short) value);
+    } else if (value instanceof RawValue) {
+      objectNode.putRawValue(fieldName, (RawValue) value);
+    } else if (value instanceof JsonNode) {
+      objectNode.set(fieldName, (JsonNode) value);
+    } else {
+      objectNode.putPOJO(fieldName, value);
+    }
+    return this;
+  }
+
+  /**
+   * 属性是否存在
+   *
+   * @param fieldName 属性
+   * @return 是否存在
+   */
+  public boolean has(String fieldName) {
+    return objectNode.has(fieldName);
+  }
+
+  /**
+   * 获取数组
+   *
+   * @param fieldName 属性
+   * @return 数组/null
+   */
+  public ArrayNode getArray(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    return get(fieldName).isArray() ? (ArrayNode) get(fieldName) : null;
+  }
+
+  /**
+   * 获取对象
+   *
+   * @param fieldName 属性
+   * @return 对象/null
+   */
+  public JsonObject getObj(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    return get(fieldName).isObject() ? new JsonObject(get(fieldName)) : null;
+  }
+  /**
+   * 获取对象
+   *
+   * @param fieldName 属性
+   * @return 对象/null
+   */
+  public <T> T getObject(String fieldName, Class<T> toValueType) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    return get(fieldName).isObject() ? Json.parse(get(fieldName), toValueType) : null;
+  }
+
+  /**
+   * 获取字符串
+   *
+   * @param fieldName 属性
+   * @return 字符串/null
+   */
+  public String getStr(String fieldName) {
+    return this.has(fieldName) ? get(fieldName).asText() : null;
+  }
+
+  /**
+   * 获取整数
+   *
+   * @param fieldName 属性
+   * @return 整数/null
+   */
+  public Integer getInt(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    if (get(fieldName).isInt()) {
+      return get(fieldName).asInt();
+    }
+    try {
+      return Integer.valueOf(get(fieldName).asText());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * 获取bool
+   *
+   * @param fieldName 属性
+   * @return bool/null
+   */
+  public Boolean getBool(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    if (get(fieldName).isBoolean()) {
+      return get(fieldName).asBoolean();
+    }
+    String val = get(fieldName).asText();
+    if ("true".equals(val)) {
+      return true;
+    }
+    if ("false".equals(val)) {
+      return false;
+    }
+    return null;
+  }
+
+  /**
+   * 获取long
+   *
+   * @param fieldName 属性
+   * @return long/null
+   */
+  public Long getLong(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    if (get(fieldName).isLong() || get(fieldName).isInt()) {
+      return get(fieldName).asLong();
+    }
+    try {
+      return Long.valueOf(get(fieldName).asText());
+    } catch (Exception e) {
+      return null;
+    }
+  }
+
+  /**
+   * 获取bigDecimal
+   *
+   * @param fieldName 属性
+   * @return BigDecimal/null
+   */
+  public BigDecimal getBigDecimal(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    return get(fieldName).isDouble()
+            || get(fieldName).isBigDecimal()
+            || get(fieldName).isBigInteger()
+            || get(fieldName).isLong()
+            || get(fieldName).isInt()
+        ? new BigDecimal(get(fieldName).asText())
+        : null;
+  }
+
+  /**
+   * 获取BigInteger
+   *
+   * @param fieldName 属性
+   * @return BigInteger/null
+   */
+  public BigInteger getBigInteger(String fieldName) {
+    if (!this.has(fieldName)) {
+      return null;
+    }
+    return get(fieldName).isBigInteger() || get(fieldName).isLong() || get(fieldName).isInt()
+        ? new BigInteger(get(fieldName).asText())
+        : null;
   }
 }
