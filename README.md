@@ -1,6 +1,6 @@
 ## json
 
-基于jackJson封装json常用方法
+基于jackson封装json常用方法
 
 ## 一、安装
 
