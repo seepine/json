@@ -2,6 +2,7 @@ package com.seepine.json;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.TreeNode;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JavaType;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -10,6 +11,7 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.seepine.json.exception.JsonException;
+import com.seepine.json.mapper.JsonMapperBuilder;
 
 /**
  * @author seepine
@@ -66,7 +68,7 @@ public class Json {
    * @return json字符串
    * @since 0.2.0
    */
-  public static String toJsonIgnoreNull(Object obj) {
+  public static String toJsonIgnoreNull(Object obj) throws JsonException {
     try {
       return NULL_OBJECT_MAPPER.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
@@ -81,7 +83,7 @@ public class Json {
    * @return json字符串
    * @since 0.2.0
    */
-  public static String toJsonIgnoreEmpty(Object obj) {
+  public static String toJsonIgnoreEmpty(Object obj) throws JsonException {
     try {
       return EMPTY_OBJECT_MAPPER.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
@@ -95,7 +97,7 @@ public class Json {
    * @param obj 对象
    * @return json字符串
    */
-  public static String toJson(Object obj) {
+  public static String toJson(Object obj) throws JsonException {
     try {
       return OBJECT_MAPPER.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
@@ -109,21 +111,34 @@ public class Json {
    * @param jsonStr json字符串
    * @return JsonObject
    */
-  public static JsonObject parseObj(String jsonStr) {
+  public static JsonObject parseObj(String jsonStr) throws JsonException {
     try {
-      return new JsonObject(parse(jsonStr));
+      return new JsonObject(parseObject(jsonStr));
     } catch (Exception e) {
       throw new JsonException(e);
     }
   }
 
   /**
+   * json字符串转ObjectNode
+   *
+   * @param jsonStr json字符串
+   * @return ObjectNode
+   */
+  public static ObjectNode parseObject(String jsonStr) throws JsonException {
+    try {
+      return (ObjectNode) parse(jsonStr);
+    } catch (Exception e) {
+      throw new JsonException(e);
+    }
+  }
+  /**
    * json字符串转ArrayNode
    *
    * @param jsonStr json字符串
    * @return ArrayNode
    */
-  public static ArrayNode parseArray(String jsonStr) {
+  public static ArrayNode parseArray(String jsonStr) throws JsonException {
     try {
       return (ArrayNode) parse(jsonStr);
     } catch (Exception e) {
@@ -137,7 +152,7 @@ public class Json {
    * @param jsonStr json字符串
    * @return JsonNode
    */
-  public static JsonNode parse(String jsonStr) {
+  public static JsonNode parse(String jsonStr) throws JsonException {
     try {
       return OBJECT_MAPPER.readTree(jsonStr);
     } catch (JsonProcessingException e) {
@@ -153,9 +168,42 @@ public class Json {
    * @return 转换对象
    * @param <T> 转换对象类型
    */
-  public static <T> T parse(String jsonStr, JavaType toValueType) {
+  public static <T> T parse(String jsonStr, JavaType toValueType) throws JsonException {
     try {
       return OBJECT_MAPPER.readValue(jsonStr, toValueType);
+    } catch (JsonProcessingException e) {
+      throw new JsonException(e);
+    }
+  }
+  /**
+   * node转对象
+   *
+   * @param treeNode 例如JsonNode或ArrayNode等等
+   * @param toValueType 转换对象Class
+   * @return 转换对象
+   * @param <T> 转换对象类型
+   * @since 0.2.2
+   */
+  public static <T> T parse(TreeNode treeNode, Class<T> toValueType) throws JsonException {
+    try {
+      return OBJECT_MAPPER.treeToValue(treeNode, toValueType);
+    } catch (JsonProcessingException e) {
+      throw new JsonException(e);
+    }
+  }
+
+  /**
+   * jsonObject转对象
+   *
+   * @param jsonObject jsonObject
+   * @param toValueType 转换对象Class
+   * @return 转换对象
+   * @param <T> 转换对象类型
+   * @since 0.2.2
+   */
+  public static <T> T parse(JsonObject jsonObject, Class<T> toValueType) throws JsonException {
+    try {
+      return OBJECT_MAPPER.treeToValue(jsonObject.toObjectNode(), toValueType);
     } catch (JsonProcessingException e) {
       throw new JsonException(e);
     }
@@ -169,7 +217,7 @@ public class Json {
    * @return 转换对象
    * @param <T> 转换对象类型
    */
-  public static <T> T parse(String jsonStr, Class<T> toValueType) {
+  public static <T> T parse(String jsonStr, Class<T> toValueType) throws JsonException {
     try {
       return OBJECT_MAPPER.readValue(jsonStr, toValueType);
     } catch (JsonProcessingException e) {
@@ -185,7 +233,7 @@ public class Json {
    * @return 转换对象
    * @param <T> 转换对象类型
    */
-  public static <T> T parse(String jsonStr, TypeReference<T> toValueTypeRef) {
+  public static <T> T parse(String jsonStr, TypeReference<T> toValueTypeRef) throws JsonException {
     try {
       return OBJECT_MAPPER.readValue(jsonStr, toValueTypeRef);
     } catch (JsonProcessingException e) {
@@ -204,7 +252,8 @@ public class Json {
    * @param <T> t 转换对象类型
    * @return 转换后对象
    */
-  public static <T> T parse(String jsonStr, Class<?> parametrized, Class<?>... parameterClasses) {
+  public static <T> T parse(String jsonStr, Class<?> parametrized, Class<?>... parameterClasses)
+      throws JsonException {
     try {
       return OBJECT_MAPPER.readValue(
           jsonStr,
@@ -222,7 +271,7 @@ public class Json {
    * @return 转换对象
    * @param <T> 转换对象类型
    */
-  public static <T> T convert(Object fromValue, JavaType toValueType) {
+  public static <T> T convert(Object fromValue, JavaType toValueType) throws JsonException {
     try {
       return OBJECT_MAPPER.convertValue(fromValue, toValueType);
     } catch (IllegalArgumentException e) {
@@ -238,7 +287,7 @@ public class Json {
    * @return 转换对象
    * @param <T> 转换对象类型
    */
-  public static <T> T convert(Object fromValue, Class<T> toValueType) {
+  public static <T> T convert(Object fromValue, Class<T> toValueType) throws JsonException {
     try {
       return OBJECT_MAPPER.convertValue(fromValue, toValueType);
     } catch (IllegalArgumentException e) {
@@ -254,7 +303,8 @@ public class Json {
    * @return 转换对象
    * @param <T> 转换对象类型
    */
-  public static <T> T convert(Object fromValue, TypeReference<T> toValueTypeRef) {
+  public static <T> T convert(Object fromValue, TypeReference<T> toValueTypeRef)
+      throws JsonException {
     try {
       return OBJECT_MAPPER.convertValue(fromValue, toValueTypeRef);
     } catch (IllegalArgumentException e) {
