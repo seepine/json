@@ -1,6 +1,6 @@
 ## json
 
-基于jackJson封装json常用方法，版本对标SpringBoot:2.6.7
+基于jackJson封装json常用方法
 
 ## 一、安装
 
@@ -41,8 +41,15 @@ class Test {
 
     // json字符串转对象
     User user = Json.parse("jsonStr", User.class);
+
     // json字符串转JsonObject
     JsonObject jsonObject = Json.parseObj("jsonStr");
+    // 获取某个属性值
+    jsonObject.getStr("name");
+    // 转对象
+    jsonObject.toObject(User.class);
+
+
     // json字符串转ArrayNode
     ArrayNode arrayNode = Json.parseArray("jsonStr");
   }
