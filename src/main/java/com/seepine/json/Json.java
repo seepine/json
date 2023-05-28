@@ -13,6 +13,9 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.seepine.json.exception.JsonException;
 import com.seepine.json.mapper.JsonMapperBuilder;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+
 /**
  * @author seepine
  */
@@ -31,6 +34,7 @@ public class Json {
    *
    * @return JsonNodeFactory
    */
+  @Nonnull
   public static JsonNodeFactory getNodeFactory() {
     return OBJECT_MAPPER.getNodeFactory();
   }
@@ -40,6 +44,7 @@ public class Json {
    *
    * @return ObjectMapper
    */
+  @Nonnull
   public static ObjectMapper getObjectMapper() {
     return OBJECT_MAPPER;
   }
@@ -49,6 +54,7 @@ public class Json {
    *
    * @return ObjectNode对象
    */
+  @Nonnull
   public static ObjectNode objectNode() {
     return new ObjectNode(OBJECT_MAPPER.getNodeFactory());
   }
@@ -57,6 +63,7 @@ public class Json {
    *
    * @return ArrayNode对象
    */
+  @Nonnull
   public static ArrayNode arrayNode() {
     return new ArrayNode(OBJECT_MAPPER.getNodeFactory());
   }
@@ -64,11 +71,14 @@ public class Json {
   /**
    * 对象转 json字符串, 忽略 null 字段
    *
+   * @code Json.toJsonIgnoreNull(new User()) = {"id":"1","nickname":""}
    * @param obj 对象
    * @return json字符串
    * @since 0.2.0
+   * @exception JsonException jsonProcessingException
    */
-  public static String toJsonIgnoreNull(Object obj) throws JsonException {
+  @Nonnull
+  public static String toJsonIgnoreNull(@Nullable Object obj) throws JsonException {
     try {
       return NULL_OBJECT_MAPPER.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
@@ -79,11 +89,14 @@ public class Json {
   /**
    * 对象转json字符串，忽略null和empty属性
    *
+   * @code Json.toJsonIgnoreNull(new User()) = {"id":"1"}
    * @param obj 对象
    * @return json字符串
    * @since 0.2.0
+   * @exception JsonException jsonProcessingException
    */
-  public static String toJsonIgnoreEmpty(Object obj) throws JsonException {
+  @Nonnull
+  public static String toJsonIgnoreEmpty(@Nullable Object obj) throws JsonException {
     try {
       return EMPTY_OBJECT_MAPPER.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
@@ -92,12 +105,15 @@ public class Json {
   }
 
   /**
-   * 对象转json字符串
+   * 对象转json字符串，不忽略null和empty属性
    *
+   * @code Json.toJsonIgnoreNull(new User()) = {"id":"1","nickname":"","age":null}
    * @param obj 对象
    * @return json字符串
+   * @exception JsonException jsonProcessingException
    */
-  public static String toJson(Object obj) throws JsonException {
+  @Nonnull
+  public static String toJson(@Nullable Object obj) throws JsonException {
     try {
       return OBJECT_MAPPER.writeValueAsString(obj);
     } catch (JsonProcessingException e) {
@@ -108,10 +124,13 @@ public class Json {
   /**
    * json字符串转JsonObject
    *
+   * @code JsonObject jsonObject = Json.parseObj( {"id":"1","nickname":"","age":null} )
    * @param jsonStr json字符串
    * @return JsonObject
+   * @exception JsonException e
    */
-  public static JsonObject parseObj(String jsonStr) throws JsonException {
+  @Nonnull
+  public static JsonObject parseObj(@Nonnull String jsonStr) throws JsonException {
     try {
       return new JsonObject(parseObject(jsonStr));
     } catch (Exception e) {
@@ -122,10 +141,13 @@ public class Json {
   /**
    * json字符串转ObjectNode
    *
+   * @code ObjectNode objectNode = Json.parseObject( {"id":"1","nickname":"","age":null} )
    * @param jsonStr json字符串
    * @return ObjectNode
+   * @exception JsonException e
    */
-  public static ObjectNode parseObject(String jsonStr) throws JsonException {
+  @Nonnull
+  public static ObjectNode parseObject(@Nonnull String jsonStr) throws JsonException {
     try {
       return (ObjectNode) parse(jsonStr);
     } catch (Exception e) {
@@ -135,10 +157,13 @@ public class Json {
   /**
    * json字符串转ArrayNode
    *
+   * @code ArrayNode arrayNode = Json.parseObject( [{"id":"1","nickname":"","age":null}] )
    * @param jsonStr json字符串
    * @return ArrayNode
+   * @exception JsonException e
    */
-  public static ArrayNode parseArray(String jsonStr) throws JsonException {
+  @Nonnull
+  public static ArrayNode parseArray(@Nonnull String jsonStr) throws JsonException {
     try {
       return (ArrayNode) parse(jsonStr);
     } catch (Exception e) {
@@ -149,10 +174,13 @@ public class Json {
   /**
    * json字符串转JsonNode
    *
+   * @code JsonNode jsonNode = Json.parse( {"id":"1","nickname":"","age":null} )
    * @param jsonStr json字符串
    * @return JsonNode
+   * @exception JsonException jsonProcessingException
    */
-  public static JsonNode parse(String jsonStr) throws JsonException {
+  @Nonnull
+  public static JsonNode parse(@Nonnull String jsonStr) throws JsonException {
     try {
       return OBJECT_MAPPER.readTree(jsonStr);
     } catch (JsonProcessingException e) {
@@ -167,8 +195,10 @@ public class Json {
    * @param toValueType 转换对象JavaType
    * @return 转换对象
    * @param <T> 转换对象类型
+   * @exception JsonException jsonProcessingException
    */
-  public static <T> T parse(String jsonStr, JavaType toValueType) throws JsonException {
+  public static <T> T parse(@Nonnull String jsonStr, @Nonnull JavaType toValueType)
+      throws JsonException {
     try {
       return OBJECT_MAPPER.readValue(jsonStr, toValueType);
     } catch (JsonProcessingException e) {
@@ -178,11 +208,13 @@ public class Json {
   /**
    * node转对象
    *
+   * @code User user = Json.parse( {"id":"1","nickname":"","age":null} , User.class)
    * @param treeNode 例如JsonNode或ArrayNode等等
    * @param toValueType 转换对象Class
    * @return 转换对象
    * @param <T> 转换对象类型
    * @since 0.2.2
+   * @exception JsonException jsonProcessingException
    */
   public static <T> T parse(TreeNode treeNode, Class<T> toValueType) throws JsonException {
     try {
@@ -195,11 +227,13 @@ public class Json {
   /**
    * jsonObject转对象
    *
+   * @code User res = Json.parse(new JsonObject() , User.class)
    * @param jsonObject jsonObject
    * @param toValueType 转换对象Class
    * @return 转换对象
    * @param <T> 转换对象类型
    * @since 0.2.2
+   * @exception JsonException jsonProcessingException
    */
   public static <T> T parse(JsonObject jsonObject, Class<T> toValueType) throws JsonException {
     try {
@@ -212,10 +246,12 @@ public class Json {
   /**
    * json字符串转对象
    *
+   * @code User user = Json.parse("{"nickname":"bob"}" , User.class)
    * @param jsonStr json字符串
    * @param toValueType 转换对象Class
    * @return 转换对象
    * @param <T> 转换对象类型
+   * @exception JsonException jsonProcessingException
    */
   public static <T> T parse(String jsonStr, Class<T> toValueType) throws JsonException {
     try {
@@ -228,10 +264,12 @@ public class Json {
   /**
    * json字符串转对象
    *
+   * @code User user = Json.parse("{"nickname":"bob"}" , new TypeReference<User>(){})
    * @param jsonStr json字符串
    * @param toValueTypeRef 转换对象TypeReference
    * @return 转换对象
    * @param <T> 转换对象类型
+   * @exception JsonException jsonProcessingException
    */
   public static <T> T parse(String jsonStr, TypeReference<T> toValueTypeRef) throws JsonException {
     try {
@@ -251,6 +289,7 @@ public class Json {
    * @param parameterClasses tClass
    * @param <T> t 转换对象类型
    * @return 转换后对象
+   * @exception JsonException jsonProcessingException
    */
   public static <T> T parse(String jsonStr, Class<?> parametrized, Class<?>... parameterClasses)
       throws JsonException {
@@ -266,10 +305,12 @@ public class Json {
   /**
    * 对象转换
    *
+   * @code AuthUser authUser = Json.convert(new User(), JavaType)
    * @param fromValue 原始对象
    * @param toValueType 转换对象JavaType
    * @return 转换对象
    * @param <T> 转换对象类型
+   * @exception JsonException illegalArgumentException
    */
   public static <T> T convert(Object fromValue, JavaType toValueType) throws JsonException {
     try {
@@ -282,10 +323,12 @@ public class Json {
   /**
    * 对象转换
    *
+   * @code AuthUser authUser = Json.convert(new User(), AuthUser.class)
    * @param fromValue 原始对象
    * @param toValueType 转换对象Class
    * @return 转换对象
    * @param <T> 转换对象类型
+   * @exception JsonException illegalArgumentException
    */
   public static <T> T convert(Object fromValue, Class<T> toValueType) throws JsonException {
     try {
@@ -298,10 +341,12 @@ public class Json {
   /**
    * 对象转换
    *
+   * @code AuthUser authUser = Json.convert(new User(), new TypeReference<AuthUser>(){})
    * @param fromValue 原始对象
    * @param toValueTypeRef 转换对象TypeReference
    * @return 转换对象
    * @param <T> 转换对象类型
+   * @exception JsonException illegalArgumentException
    */
   public static <T> T convert(Object fromValue, TypeReference<T> toValueTypeRef)
       throws JsonException {
