@@ -13,6 +13,9 @@ import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.Iterator;
 import java.util.List;
 import javax.annotation.Nonnull;
@@ -238,6 +241,12 @@ public class JsonObject extends JsonNode implements Serializable {
     } else if (value instanceof JsonNode) {
       objectNode.set(fieldName, (JsonNode) value);
     } else {
+      if (value instanceof LocalDate
+          || value instanceof LocalDateTime
+          || value instanceof LocalTime) {
+        throw new JsonException(
+            "ObjectNode not supported Java 8 date/time, please convert to String");
+      }
       objectNode.putPOJO(fieldName, value);
     }
     return this;
