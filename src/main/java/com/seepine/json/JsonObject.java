@@ -9,15 +9,14 @@ import com.fasterxml.jackson.databind.node.JsonNodeType;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.fasterxml.jackson.databind.util.RawValue;
 import com.seepine.json.exception.JsonException;
-
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Iterator;
 import java.util.List;
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
 
 /**
  * enhance objectNode get/set, the get will return null when there are no values or mismatched types
@@ -284,6 +283,9 @@ public class JsonObject extends JsonNode implements Serializable {
   public JsonObject getObj(@Nonnull String fieldName) throws JsonException {
     JsonNode get = get(fieldName);
     if (get == null) {
+      return null;
+    }
+    if (get.isNull()) {
       return null;
     }
     if (!get.isObject()) {
