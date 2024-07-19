@@ -16,8 +16,8 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Iterator;
-import java.util.List;
+import java.util.*;
+import java.util.function.Consumer;
 import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
@@ -407,15 +407,12 @@ public class JsonObject extends JsonNode implements Serializable {
    */
   @Nullable
   public BigDecimal getBigDecimal(@Nonnull String fieldName) {
-    if (!this.has(fieldName)) {
+    JsonNode get = get(fieldName);
+    if (get == null) {
       return null;
     }
-    return get(fieldName).isDouble()
-            || get(fieldName).isBigDecimal()
-            || get(fieldName).isBigInteger()
-            || get(fieldName).isLong()
-            || get(fieldName).isInt()
-        ? new BigDecimal(get(fieldName).asText())
+    return get.isDouble() || get.isBigDecimal() || get.isBigInteger() || get.isLong() || get.isInt()
+        ? new BigDecimal(get.asText())
         : null;
   }
 
@@ -533,5 +530,74 @@ public class JsonObject extends JsonNode implements Serializable {
       TypeSerializer typeSerializer)
       throws IOException {
     objectNode.serializeWithType(jsonGenerator, serializerProvider, typeSerializer);
+  }
+
+  public Iterator<JsonNode> elements() {
+    return objectNode.elements();
+  }
+
+  @Override
+  public int size() {
+    return objectNode.size();
+  }
+
+  @Override
+  public boolean isEmpty() {
+    return objectNode.isEmpty();
+  }
+
+  @Override
+  public boolean isObject() {
+    return objectNode.isObject();
+  }
+
+  @Override
+  public Iterator<String> fieldNames() {
+    return objectNode.fieldNames();
+  }
+
+  @Override
+  public boolean has(int index) {
+    return objectNode.has(index);
+  }
+
+  @Override
+  public boolean hasNonNull(String fieldName) {
+    return objectNode.hasNonNull(fieldName);
+  }
+
+  @Override
+  public boolean hasNonNull(int index) {
+    return objectNode.hasNonNull(index);
+  }
+
+  @Override
+  public Iterator<Map.Entry<String, JsonNode>> fields() {
+    return objectNode.fields();
+  }
+
+  @Override
+  public Set<Map.Entry<String, JsonNode>> properties() {
+    return objectNode.properties();
+  }
+
+  @Override
+  public void forEach(Consumer<? super JsonNode> action) {
+    objectNode.forEach(action);
+  }
+
+  @Override
+  public Spliterator<JsonNode> spliterator() {
+    return objectNode.spliterator();
+  }
+
+  @Override
+  public ObjectNode withObject(JsonPointer ptr, OverwriteMode overwriteMode, boolean preferIndex) {
+    return objectNode.withObject(ptr, overwriteMode, preferIndex);
+  }
+
+  @Override
+  public String toPrettyString() {
+    return objectNode.toPrettyString();
   }
 }
